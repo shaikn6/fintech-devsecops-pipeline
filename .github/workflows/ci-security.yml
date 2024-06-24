@@ -352,7 +352,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   policy-check:
     name: Policy Check — Conftest + OPA
-    if: hashFiles('k8s/**') != '' || hashFiles('terraform/**') != ''  # skip if no manifests
+    if: hashFiles('k8s/**') != '' || hashFiles('terraform/**') != ''
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
