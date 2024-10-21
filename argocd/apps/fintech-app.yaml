@@ -1,0 +1,52 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fintech-api
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    app.kubernetes.io/name: fintech-api
+    app.kubernetes.io/part-of: fintech-platform
+  annotations:
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: devsecops-alerts
+    notifications.argoproj.io/subscribe.on-health-degraded.slack: devsecops-alerts
+spec:
+  project: fintech-project
+  source:
+    repoURL: https://github.com/shaikn6/fintech-devsecops-pipeline
+    targetRevision: HEAD
+    path: helm/fintech-api
+    helm:
+      releaseName: fintech-api
+      valueFiles:
+        - values.yaml
+      parameters:
+        - name: image.tag
+          value: "latest"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fintech-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - Validate=true
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 10
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
