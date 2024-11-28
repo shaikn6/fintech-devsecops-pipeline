@@ -1,0 +1,76 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: fintech-project
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: "Fintech DevSecOps platform - production workloads"
+  sourceRepos:
+    - https://github.com/shaikn6/fintech-devsecops-pipeline
+    - https://charts.bitnami.com/bitnami
+    - https://kubernetes.github.io/ingress-nginx
+    - https://cert-manager.io
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: fintech-prod
+    - server: https://kubernetes.default.svc
+      namespace: fintech-staging
+    - server: https://kubernetes.default.svc
+      namespace: fintech-monitoring
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  namespaceResourceBlacklist:
+    - group: ''
+      kind: ResourceQuota
+  roles:
+    - name: fintech-developer
+      description: "Read-only access for developers"
+      policies:
+        - p, proj:fintech-project:fintech-developer, applications, get, fintech-project/*, allow
+        - p, proj:fintech-project:fintech-developer, applications, sync, fintech-project/fintech-api, allow
+      groups:
+        - fintech-developers
+    - name: fintech-deployer
+      description: "CI/CD pipeline service account"
+      policies:
+        - p, proj:fintech-project:fintech-deployer, applications, *, fintech-project/*, allow
+        - p, proj:fintech-project:fintech-deployer, repositories, *, *, allow
+      groups:
+        - fintech-cicd
+    - name: fintech-admin
+      description: "Full project administration"
+      policies:
+        - p, proj:fintech-project:fintech-admin, *, *, fintech-project/*, allow
+      groups:
+        - fintech-platform-team
+  syncWindows:
+    - kind: allow
+      schedule: '0 8 * * 1-5'
+      duration: 8h
+      applications:
+        - '*'
+      manualSync: true
+    - kind: deny
+      schedule: '0 0 * * 5'
+      duration: 8h
+      applications:
+        - fintech-api
+      manualSync: false
+  signatureKeys:
+    - keyID: 4AEE18F83AFDEB23
+  orphanedResources:
+    warn: true
+    ignore:
+      - group: ''
+        kind: ConfigMap
+        name: kube-root-ca.crt
