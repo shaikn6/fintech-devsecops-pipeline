@@ -1,0 +1,37 @@
+apiVersion: v2
+name: fintech-api
+description: >
+  Production Helm chart for the Fintech API microservice.
+  Includes HPA, NetworkPolicy, PodDisruptionBudget, and full security context.
+type: application
+version: 1.3.0
+appVersion: "2.4.1"
+
+keywords:
+  - fintech
+  - api
+  - microservice
+  - devsecops
+
+home: https://github.com/shaikn6/fintech-devsecops-pipeline
+sources:
+  - https://github.com/shaikn6/fintech-devsecops-pipeline
+
+maintainers:
+  - name: fintech-platform-team
+    email: platform@fintech.internal
+    url: https://github.com/shaikn6
+
+annotations:
+  artifacthub.io/category: integration-delivery
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/signKey: |
+    fingerprint: 4AEE18F83AFDEB23
+    url: https://github.com/shaikn6.gpg
+  artifacthub.io/changes: |
+    - kind: added
+      description: SLSA Level 3 provenance attestation
+    - kind: changed
+      description: HPA targets updated to use ContainerResource metrics
+    - kind: security
+      description: readOnlyRootFilesystem enforced; ALL capabilities dropped
