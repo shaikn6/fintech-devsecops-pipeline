@@ -1,0 +1,149 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fintech-prod
+  labels:
+    kubernetes.io/metadata.name: fintech-prod
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: latest
+---
+# ServiceAccount for fintech-api (one SA per microservice)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fintech-api-sa
+  namespace: fintech-prod
+  labels:
+    app.kubernetes.io/name: fintech-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: fintech-platform
+  annotations:
+    # AWS IRSA - grants read access to fintech secrets in Secrets Manager
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/fintech-api-sa-role
+    eks.amazonaws.com/token-expiration: "3600"
+automountServiceAccountToken: false
+---
+# Role - minimal permissions the app needs inside its own namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: fintech-api-role
+  namespace: fintech-prod
+  labels:
+    app.kubernetes.io/name: fintech-api
+    app.kubernetes.io/component: api
+rules:
+  # Read own ConfigMaps (feature flags, runtime config)
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["fintech-api-config", "fintech-api-feature-flags"]
+    verbs: ["get", "watch"]
+  # Read own Secrets (TLS certs rotated by cert-manager)
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["fintech-api-tls", "fintech-api-secrets"]
+    verbs: ["get", "watch"]
+  # Pod self-inspection for graceful shutdown coordination
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get"]
+  # Emit events for observability
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: fintech-api-rolebinding
+  namespace: fintech-prod
+  labels:
+    app.kubernetes.io/name: fintech-api
+subjects:
+  - kind: ServiceAccount
+    name: fintech-api-sa
+    namespace: fintech-prod
+roleRef:
+  kind: Role
+  apiGroup: rbac.authorization.k8s.io
+  name: fintech-api-role
+---
+# ClusterRole - read-only cluster-scoped resources (nodes for topology awareness)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: fintech-api-cluster-reader
+  labels:
+    app.kubernetes.io/name: fintech-api
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: fintech-api-cluster-reader-binding
+  labels:
+    app.kubernetes.io/name: fintech-api
+subjects:
+  - kind: ServiceAccount
+    name: fintech-api-sa
+    namespace: fintech-prod
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: fintech-api-cluster-reader
+---
+# ArgoCD deployer ServiceAccount (CI/CD pipeline)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: argocd-deployer-sa
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-deployer
+    app.kubernetes.io/part-of: fintech-platform
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/argocd-deployer-role
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: argocd-deployer-role
+  namespace: fintech-prod
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["services", "configmaps", "serviceaccounts"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses", "networkpolicies"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["policy"]
+    resources: ["poddisruptionbudgets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: argocd-deployer-rolebinding
+  namespace: fintech-prod
+subjects:
+  - kind: ServiceAccount
+    name: argocd-deployer-sa
+    namespace: argocd
+roleRef:
+  kind: Role
+  apiGroup: rbac.authorization.k8s.io
+  name: argocd-deployer-role
