@@ -1,11 +1,14 @@
 name: CD — GitOps Deploy
 
 on:
-  push:
-    branches: ["main"]
-    paths-ignore:
-      - "docs/**"
-      - "*.md"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options: [dev, prod]
   workflow_run:
     workflows: ["Security Pipeline"]
     types: [completed]
