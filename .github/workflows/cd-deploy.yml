@@ -1,6 +1,8 @@
 name: CD — GitOps Deploy
 
 on:
+  # Manual, gated deploys only. The Security Pipeline must be green first,
+  # but promotion to an environment is a deliberate human action.
   workflow_dispatch:
     inputs:
       environment:
@@ -9,10 +11,6 @@ on:
         default: 'dev'
         type: choice
         options: [dev, prod]
-  workflow_run:
-    workflows: ["Security Pipeline"]
-    types: [completed]
-    branches: ["main"]
 
 permissions:
   contents: write
