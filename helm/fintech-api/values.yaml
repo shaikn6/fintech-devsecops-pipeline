@@ -152,6 +152,13 @@ pdb:
   enabled: true
   minAvailable: 1
 
+# Non-secret application config rendered into a ConfigMap (templates/configmap.yaml).
+# Changes here roll pods automatically via the deployment's checksum/config annotation.
+config:
+  APP_ENV: production
+  LOG_LEVEL: info
+  LOG_FORMAT: json
+
 env:
   - name: APP_ENV
     value: production

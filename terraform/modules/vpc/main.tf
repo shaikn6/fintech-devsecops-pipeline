@@ -83,8 +83,8 @@ resource "aws_subnet" "private" {
   map_public_ip_on_launch = false
 
   tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-private-${local.azs[count.index]}"
-    Tier = "private"
+    Name                                        = "${local.name_prefix}-private-${local.azs[count.index]}"
+    Tier                                        = "private"
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
     "kubernetes.io/role/internal-elb"           = "1"
   })
@@ -206,8 +206,8 @@ resource "aws_iam_role" "flow_log" {
 resource "aws_iam_role_policy" "flow_log" {
   count = var.enable_flow_logs ? 1 : 0
 
-  name   = "${local.name_prefix}-vpc-flow-log-policy"
-  role   = aws_iam_role.flow_log[0].id
+  name = "${local.name_prefix}-vpc-flow-log-policy"
+  role = aws_iam_role.flow_log[0].id
 
   policy = jsonencode({
     Version = "2012-10-17"
