@@ -99,7 +99,7 @@ resource "aws_eks_node_group" "this" {
   }
 
   labels = merge(each.value.labels, {
-    "node-group" = each.key
+    "node-group"  = each.key
     "environment" = var.environment
   })
 
@@ -118,8 +118,8 @@ resource "aws_eks_node_group" "this" {
   }
 
   tags = merge(local.common_tags, {
-    Name       = "${local.name_prefix}-${each.key}"
-    NodeGroup  = each.key
+    Name      = "${local.name_prefix}-${each.key}"
+    NodeGroup = each.key
   })
 
   lifecycle {
@@ -153,7 +153,7 @@ resource "aws_launch_template" "node" {
 
   metadata_options {
     http_endpoint               = "enabled"
-    http_tokens                 = "required"   # IMDSv2 required (CIS benchmark)
+    http_tokens                 = "required" # IMDSv2 required (CIS benchmark)
     http_put_response_hop_limit = 1
     instance_metadata_tags      = "enabled"
   }
@@ -193,19 +193,19 @@ resource "aws_launch_template" "node" {
 # ─── EKS Add-ons ─────────────────────────────────────────────────────────────
 
 resource "aws_eks_addon" "vpc_cni" {
-  cluster_name             = aws_eks_cluster.this.name
-  addon_name               = "vpc-cni"
-  addon_version            = var.addon_versions.vpc_cni
+  cluster_name                = aws_eks_cluster.this.name
+  addon_name                  = "vpc-cni"
+  addon_version               = var.addon_versions.vpc_cni
   resolve_conflicts_on_update = "OVERWRITE"
-  service_account_role_arn = aws_iam_role.vpc_cni.arn
+  service_account_role_arn    = aws_iam_role.vpc_cni.arn
 
   tags = local.common_tags
 }
 
 resource "aws_eks_addon" "coredns" {
-  cluster_name             = aws_eks_cluster.this.name
-  addon_name               = "coredns"
-  addon_version            = var.addon_versions.coredns
+  cluster_name                = aws_eks_cluster.this.name
+  addon_name                  = "coredns"
+  addon_version               = var.addon_versions.coredns
   resolve_conflicts_on_update = "OVERWRITE"
 
   tags = local.common_tags
@@ -214,20 +214,20 @@ resource "aws_eks_addon" "coredns" {
 }
 
 resource "aws_eks_addon" "kube_proxy" {
-  cluster_name             = aws_eks_cluster.this.name
-  addon_name               = "kube-proxy"
-  addon_version            = var.addon_versions.kube_proxy
+  cluster_name                = aws_eks_cluster.this.name
+  addon_name                  = "kube-proxy"
+  addon_version               = var.addon_versions.kube_proxy
   resolve_conflicts_on_update = "OVERWRITE"
 
   tags = local.common_tags
 }
 
 resource "aws_eks_addon" "ebs_csi_driver" {
-  cluster_name             = aws_eks_cluster.this.name
-  addon_name               = "aws-ebs-csi-driver"
-  addon_version            = var.addon_versions.ebs_csi_driver
+  cluster_name                = aws_eks_cluster.this.name
+  addon_name                  = "aws-ebs-csi-driver"
+  addon_version               = var.addon_versions.ebs_csi_driver
   resolve_conflicts_on_update = "OVERWRITE"
-  service_account_role_arn = aws_iam_role.ebs_csi_driver.arn
+  service_account_role_arn    = aws_iam_role.ebs_csi_driver.arn
 
   tags = local.common_tags
 
@@ -290,7 +290,7 @@ resource "aws_security_group" "nodes" {
   vpc_id      = var.vpc_id
 
   tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-eks-nodes-sg"
+    Name                                        = "${local.name_prefix}-eks-nodes-sg"
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   })
 
