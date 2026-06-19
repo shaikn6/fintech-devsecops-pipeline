@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/banner.png" alt="fintech-devsecops-pipeline" width="100%"></p>
+
 <div align="center">
 
 # Fintech DevSecOps Pipeline
