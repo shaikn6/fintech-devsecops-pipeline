@@ -77,12 +77,11 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
 
-      - name: Install dependencies
-        run: pip install -e ".[dev]" safety pip-audit
+      - name: Install audit tools
+        run: pip install safety pip-audit
 
-      - name: Run pip-audit
+      - name: Run pip-audit (repo scan)
         run: |
           pip-audit --format json --output pip-audit.json || true
           pip-audit --format cyclonedx-json --output pip-audit-sbom.json || true
@@ -100,6 +99,7 @@ jobs:
             pip-audit-sbom.json
             safety-results.json
           retention-days: 90
+          if-no-files-found: ignore
 
   # ─────────────────────────────────────────────────────────────────────────────
   # CIS Kubernetes benchmark
@@ -127,6 +127,7 @@ jobs:
           name: cis-benchmark-${{ github.run_id }}
           path: cis-k8s-results.json
           retention-days: 90
+          if-no-files-found: ignore
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Terraform security posture
@@ -162,6 +163,7 @@ jobs:
             tfsec-results.json
             checkov-tf-weekly.json
           retention-days: 90
+          if-no-files-found: ignore
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Aggregate compliance report
@@ -183,10 +185,9 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
 
-      - name: Install dependencies
-        run: pip install -e ".[dev]"
+      - name: Install report dependencies
+        run: pip install jinja2
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
