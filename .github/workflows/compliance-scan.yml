@@ -55,7 +55,7 @@ jobs:
           output: trivy-config-results.json
 
       - name: Upload sweep results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: infra-sweep-${{ github.run_id }}
           path: |
@@ -91,7 +91,7 @@ jobs:
           safety check --json --output safety-results.json || true
 
       - name: Upload dependency audit
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dependency-audit-${{ github.run_id }}
           path: |
@@ -122,7 +122,7 @@ jobs:
           soft_fail: true
 
       - name: Upload CIS benchmark results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cis-benchmark-${{ github.run_id }}
           path: cis-k8s-results.json
@@ -156,7 +156,7 @@ jobs:
           soft_fail: true
 
       - name: Upload Terraform posture results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: terraform-posture-${{ github.run_id }}
           path: |
@@ -205,7 +205,7 @@ jobs:
             --run-id ${{ github.run_id }}
 
       - name: Upload weekly compliance report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: weekly-compliance-report-${{ github.run_id }}
           path: |
