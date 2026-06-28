@@ -61,7 +61,7 @@ jobs:
       url: https://argocd.dev.fintech-platform.internal
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.GITOPS_TOKEN }}
 
@@ -128,7 +128,7 @@ jobs:
     needs: [deploy-dev]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python ${{ env.PYTHON_VERSION || '3.11' }}
         uses: actions/setup-python@v6
@@ -160,7 +160,7 @@ jobs:
       url: https://argocd.prod.fintech-platform.internal
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.GITOPS_TOKEN }}
 
