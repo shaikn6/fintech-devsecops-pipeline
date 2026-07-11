@@ -1,7 +1,11 @@
 version: 2
 updates:
   - package-ecosystem: "terraform"
-    directory: "/terraform"
+    directory: "/terraform/modules/eks"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "terraform"
+    directory: "/terraform/modules/vpc"
     schedule:
       interval: "weekly"
   - package-ecosystem: "github-actions"
