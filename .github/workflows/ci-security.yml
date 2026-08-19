@@ -28,7 +28,6 @@ jobs:
       - name: Format check
         run: terraform fmt -check -recursive
       - name: Validate modules
-        continue-on-error: true
         run: |
           for dir in terraform/modules/*/; do
             echo "::group::validate $dir"
