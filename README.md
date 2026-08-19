@@ -65,12 +65,7 @@ flowchart LR
     end
 
     CI --> SUM[Compliance summary]
-    SUM --> SLSA["SLSA L3 provenance<br/>cosign-signed attestation"]
-    SLSA --> GATE{Manual deploy gate<br/>cd-deploy.yml}
-    GATE --> ARGODEV["ArgoCD sync → EKS dev<br/>helm/fintech-api"]
-    ARGODEV --> ITEST[Integration tests]
-    ITEST --> APPROVE{Prod approval}
-    APPROVE --> ARGOPROD[ArgoCD sync → EKS prod]
+    SUM --> ARGOCD["ArgoCD auto-sync<br/>helm/fintech-api → EKS"]
 
     WEEKLY["Weekly compliance scan<br/>(cron) — Trivy fs/config,<br/>pip-audit SBOM, CIS-K8s,<br/>tfsec → report + issue"] -.-> CI
 ```
@@ -119,7 +114,7 @@ kubectl apply -f argocd/apps/fintech-app.yaml
 ## Directory Structure
 
 ```
-├── .github/workflows/    # ci-security, cd-deploy, compliance-scan
+├── .github/workflows/    # ci-security, compliance-scan
 ├── terraform/modules/    # vpc, eks (cluster + IRSA + addons)
 ├── helm/fintech-api/     # Helm chart: deployment, svc, ingress, hpa, netpol
 ├── argocd/               # ArgoCD Application + AppProject (GitOps)
