@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![ArgoCD](https://img.shields.io/badge/ArgoCD-GitOps-orange)](https://argoproj.github.io/cd/)
 
-**Shift-left DevSecOps reference platform for fintech workloads — hardened Terraform (VPC + private EKS with IRSA), an OPA/Rego admission policy set, a multi-scanner CI security gate, SLSA build provenance, and ArgoCD GitOps delivery.**
+**Shift-left DevSecOps reference platform for fintech workloads — hardened Terraform (VPC + private EKS with IRSA), an OPA/Rego admission policy set, a multi-scanner CI security gate, and ArgoCD GitOps delivery.**
 
 </div>
 
@@ -78,7 +78,6 @@ flowchart LR
 | Compute | Terraform `eks` module | Private EKS control plane (KMS-encrypted secrets, audit logging), managed node group, IRSA OIDC provider, vpc-cni/coredns/kube-proxy/ebs-csi addons |
 | CI security gate | GitHub Actions (`ci-security.yml`) | terraform fmt/validate, helm lint/template, Checkov, OPA/Rego, Gitleaks |
 | Admission policy | OPA / Rego (`policies/rego`) | Container security, image signing, network-policy `deny` rules |
-| Supply chain | SLSA + cosign (`slsa/build-provenance.yaml`) | SLSA Level 3 signed build provenance |
 | Compliance | Scheduled scan (`compliance-scan.yml` + `scripts/compliance_reporter.py`) | Weekly Trivy/tfsec/pip-audit/CIS-K8s sweep → HTML+JSON report, auto-issue on critical findings |
 | GitOps | ArgoCD (`argocd/`) | Self-healing app + AppProject, prune + auto-sync to EKS |
 | Delivery artifact | Helm (`helm/fintech-api`) | Deployment, service, ingress, HPA, NetworkPolicy, configmap |
@@ -119,14 +118,14 @@ kubectl apply -f argocd/apps/fintech-app.yaml
 ├── helm/fintech-api/     # Helm chart: deployment, svc, ingress, hpa, netpol
 ├── argocd/               # ArgoCD Application + AppProject (GitOps)
 ├── policies/rego/        # OPA admission policies (container, image, network)
-├── slsa/                 # SLSA L3 build-provenance workflow
+├── slsa/                 # SLSA build-provenance workflow definition (not wired into CI)
 ├── k8s/                  # RBAC manifests
 └── scripts/              # compliance_reporter.py
 ```
 
 ## Tech Stack
 
-Terraform 1.9 · AWS (VPC, EKS, IAM/IRSA, KMS, ECR, CloudWatch) · Helm · ArgoCD · OPA/Rego · Checkov · tfsec · Trivy · Gitleaks · SLSA + cosign · Python (compliance reporter)
+Terraform 1.9 · AWS (VPC, EKS, IAM/IRSA, KMS, ECR, CloudWatch) · Helm · ArgoCD · OPA/Rego · Checkov · tfsec · Trivy · Gitleaks · Python (compliance reporter)
 
 ## License
 
