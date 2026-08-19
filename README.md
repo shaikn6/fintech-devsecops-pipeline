@@ -59,9 +59,9 @@ flowchart LR
         direction TB
         TF["terraform fmt + validate<br/>(hard gate)"]
         HELM["helm lint + template<br/>(hard gate)"]
-        CKV[Checkov IaC scan]
-        OPA["OPA / Rego check<br/>policies/rego"]
-        GL[Gitleaks secret scan]
+        CKV["Checkov IaC scan<br/>(advisory)"]
+        OPA["OPA / Rego check<br/>policies/rego<br/>(advisory)"]
+        GL["Gitleaks secret scan<br/>(hard gate)"]
     end
 
     CI --> SUM[Compliance summary]
@@ -108,7 +108,10 @@ kubectl apply -f argocd/apps/fintech-app.yaml
 
 > The `eks`/`vpc` modules are consumed by a root configuration that supplies a
 > backend and AWS credentials; the commands above run the same validation,
-> linting, and policy gates the CI security pipeline enforces, fully offline.
+> linting, and policy checks the CI security pipeline runs, fully offline.
+> Terraform validate, Helm lint, and Gitleaks are hard gates that fail the
+> build; Checkov and the OPA/Rego check are advisory and report findings
+> without blocking.
 
 ## Directory Structure
 
