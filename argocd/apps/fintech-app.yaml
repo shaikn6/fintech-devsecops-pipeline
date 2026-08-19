@@ -23,7 +23,7 @@ spec:
         - values.yaml
       parameters:
         - name: image.tag
-          value: "latest"
+          value: "2.4.1"
   destination:
     server: https://kubernetes.default.svc
     namespace: fintech-prod
