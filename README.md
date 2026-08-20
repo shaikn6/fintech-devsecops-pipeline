@@ -82,6 +82,27 @@ flowchart LR
 | GitOps | ArgoCD (`argocd/`) | Self-healing app + AppProject, prune + auto-sync to EKS |
 | Delivery artifact | Helm (`helm/fintech-api`) | Deployment, service, ingress, HPA, NetworkPolicy, configmap |
 
+## Admission Policy Example
+
+A real deny rule from `policies/rego/container-security.rego`:
+
+```rego
+# DENY: privileged containers
+deny[msg] if {
+    input.request.kind.kind == "Pod"
+    container := input.request.object.spec.containers[_]
+    container.securityContext.privileged == true
+    msg := sprintf(
+        "Container '%v' is privileged. Privileged containers are forbidden.",
+        [container.name]
+    )
+}
+```
+
+The same file also denies containers missing CPU/memory requests and
+limits, missing `readOnlyRootFilesystem: true`, and missing
+`capabilities.drop: ["ALL"]`.
+
 ## Quick Start
 
 ```bash
