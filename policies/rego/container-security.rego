@@ -1,10 +1,11 @@
 package kubernetes.admission
 
+import future.keywords.contains
 import future.keywords.if
 import future.keywords.in
 
 # DENY: containers running as root (runAsUser == 0)
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
     sc := container.securityContext
@@ -15,7 +16,7 @@ deny[msg] if {
     )
 }
 
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
     sc := container.securityContext
@@ -26,7 +27,7 @@ deny[msg] if {
     )
 }
 
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
     not container.securityContext.runAsNonRoot
@@ -40,7 +41,7 @@ deny[msg] if {
 }
 
 # DENY: privileged containers
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
     container.securityContext.privileged == true
@@ -50,7 +51,7 @@ deny[msg] if {
     )
 }
 
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.initContainers[_]
     container.securityContext.privileged == true
@@ -61,7 +62,7 @@ deny[msg] if {
 }
 
 # DENY: allowPrivilegeEscalation not explicitly false
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
     not container.securityContext.allowPrivilegeEscalation == false
@@ -72,7 +73,7 @@ deny[msg] if {
 }
 
 # DENY: missing CPU limit
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
     not container.resources.limits.cpu
@@ -83,7 +84,7 @@ deny[msg] if {
 }
 
 # DENY: missing memory limit
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
     not container.resources.limits.memory
@@ -94,7 +95,7 @@ deny[msg] if {
 }
 
 # DENY: missing CPU request
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
     not container.resources.requests.cpu
@@ -105,7 +106,7 @@ deny[msg] if {
 }
 
 # DENY: missing memory request
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
     not container.resources.requests.memory
@@ -116,7 +117,7 @@ deny[msg] if {
 }
 
 # DENY: read-only root filesystem not set
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
     not container.securityContext.readOnlyRootFilesystem == true
@@ -127,10 +128,10 @@ deny[msg] if {
 }
 
 # DENY: capabilities not dropped
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
-    not "ALL" in container.securityContext.capabilities.drop
+    not "ALL" in object.get(container, ["securityContext", "capabilities", "drop"], [])
     msg := sprintf(
         "Container '%v' must drop ALL capabilities. Add capabilities.drop=['ALL'] to securityContext.",
         [container.name]

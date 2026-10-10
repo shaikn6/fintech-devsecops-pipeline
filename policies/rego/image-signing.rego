@@ -1,5 +1,6 @@
 package kubernetes.admission
 
+import future.keywords.contains
 import future.keywords.if
 import future.keywords.in
 
@@ -22,7 +23,7 @@ image_registry(image) := registry if {
 } else := "docker.io/library"
 
 # DENY: image from disallowed registry
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
     registry := image_registry(container.image)
@@ -33,7 +34,7 @@ deny[msg] if {
     )
 }
 
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.initContainers[_]
     registry := image_registry(container.image)
@@ -45,7 +46,7 @@ deny[msg] if {
 }
 
 # DENY: image tag is 'latest'
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
     endswith(container.image, ":latest")
@@ -56,7 +57,7 @@ deny[msg] if {
 }
 
 # DENY: image has no tag or digest
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
     not contains(container.image, ":")
@@ -68,7 +69,7 @@ deny[msg] if {
 }
 
 # DENY: image not signed — cosign annotation missing or false
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
     annotations := object.get(input.request.object.metadata, "annotations", {})
@@ -81,7 +82,7 @@ deny[msg] if {
 }
 
 # DENY: no SBOM attestation annotation
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     container := input.request.object.spec.containers[_]
     annotations := object.get(input.request.object.metadata, "annotations", {})

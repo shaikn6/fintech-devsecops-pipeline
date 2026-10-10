@@ -69,9 +69,21 @@ jobs:
       - uses: open-policy-agent/setup-opa@v2
         with:
           version: latest
+      - uses: azure/setup-helm@v5
       - name: Check Rego policies
-        continue-on-error: true
-        run: opa check policies/rego
+        run: opa check policies
+      - name: Unit-test Rego policies
+        run: opa test policies/ -v
+      - name: Install Conftest
+        env:
+          CONFTEST_VERSION: "0.71.1"
+        run: |
+          curl -fsSL "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz" \
+            | tar -xz -C /usr/local/bin conftest
+      - name: Evaluate rendered Helm chart against policies
+        run: |
+          helm template fintech-api helm/fintech-api --namespace fintech-prod \
+            | conftest test --policy policies/ -
 
   secrets:
     name: Secrets Scan — Gitleaks
@@ -100,6 +112,6 @@ jobs:
             echo "| Terraform fmt + validate | ${{ needs.terraform.result }} |"
             echo "| Helm lint + template | ${{ needs.helm.result }} |"
             echo "| Checkov IaC scan | ${{ needs.iac-scan.result }} |"
-            echo "| OPA/Rego policy check | ${{ needs.policy.result }} |"
+            echo "| OPA/Rego check + tests + Conftest | ${{ needs.policy.result }} |"
             echo "| Gitleaks secret scan | ${{ needs.secrets.result }} |"
           } >> "$GITHUB_STEP_SUMMARY"

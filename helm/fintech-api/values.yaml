@@ -23,19 +23,22 @@ podAnnotations:
   prometheus.io/port: "8080"
   prometheus.io/path: "/metrics"
 
+# name/version/managed-by labels come from the chart's common labels helper.
 podLabels:
-  app.kubernetes.io/name: fintech-api
-  app.kubernetes.io/version: "2.4.1"
   app.kubernetes.io/component: api
   app.kubernetes.io/part-of: fintech-platform
-  app.kubernetes.io/managed-by: Helm
   tags.datadoghq.com/env: production
   tags.datadoghq.com/service: fintech-api
   tags.datadoghq.com/version: "2.4.1"
 
 serviceAccount:
-  create: false
+  create: true
+  # Name is fixed so the Role/ClusterRole bindings in k8s/rbac.yaml resolve.
   name: fintech-api-sa
+  annotations:
+    # AWS IRSA - grants read access to fintech secrets in Secrets Manager
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/fintech-api-sa-role
+    eks.amazonaws.com/token-expiration: "3600"
   automountServiceAccountToken: false
 
 podSecurityContext:
