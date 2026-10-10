@@ -49,7 +49,7 @@ Closes #
 
 ## Pipeline Validation
 - [ ] Security pipeline (ci-security.yml) passes on this branch
-- [ ] Deployment pipeline (cd-deploy.yml) tested in dev environment
+- [ ] ArgoCD sync verified against a dev cluster (if applicable; this repo has no deploy workflow)
 - [ ] Compliance report reviewed
 
 ## Screenshots / Logs
