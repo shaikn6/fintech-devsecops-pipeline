@@ -40,3 +40,12 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/name: {{ include "fintech-api.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+{{/* Create the name of the service account to use */}}
+{{- define "fintech-api.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create }}
+{{- default (include "fintech-api.fullname" .) .Values.serviceAccount.name }}
+{{- else }}
+{{- default "default" .Values.serviceAccount.name }}
+{{- end }}
+{{- end }}

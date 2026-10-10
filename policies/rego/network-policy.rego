@@ -1,5 +1,6 @@
 package kubernetes.admission
 
+import future.keywords.contains
 import future.keywords.if
 import future.keywords.in
 
@@ -9,10 +10,10 @@ protected_namespaces := {
     "fintech-monitoring",
 }
 
-pod_labels(pod) := pod.metadata.labels
+pod_labels(pod) := object.get(pod.metadata, "labels", {})
 
 # DENY: Pod in protected namespace has no app label for NetworkPolicy selection
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "Pod"
     ns := input.request.namespace
     ns in protected_namespaces
@@ -26,7 +27,7 @@ deny[msg] if {
 }
 
 # DENY: NetworkPolicy must specify Ingress policyType
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "NetworkPolicy"
     ns := input.request.namespace
     ns in protected_namespaces
@@ -39,7 +40,7 @@ deny[msg] if {
 }
 
 # DENY: NetworkPolicy must specify Egress policyType
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "NetworkPolicy"
     ns := input.request.namespace
     ns in protected_namespaces
@@ -52,7 +53,7 @@ deny[msg] if {
 }
 
 # DENY: empty podSelector on non-default-deny policies
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "NetworkPolicy"
     ns := input.request.namespace
     ns in protected_namespaces
@@ -66,7 +67,7 @@ deny[msg] if {
 }
 
 # DENY: ingress rule allows from 0.0.0.0/0
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "NetworkPolicy"
     ns := input.request.namespace
     ns in protected_namespaces
@@ -81,7 +82,7 @@ deny[msg] if {
 }
 
 # DENY: egress rule allows to 0.0.0.0/0 without RFC1918 exceptions
-deny[msg] if {
+deny contains msg if {
     input.request.kind.kind == "NetworkPolicy"
     ns := input.request.namespace
     ns in protected_namespaces

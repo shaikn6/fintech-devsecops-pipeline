@@ -11,22 +11,8 @@ metadata:
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/audit-version: latest
 ---
-# ServiceAccount for fintech-api (one SA per microservice)
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: fintech-api-sa
-  namespace: fintech-prod
-  labels:
-    app.kubernetes.io/name: fintech-api
-    app.kubernetes.io/component: api
-    app.kubernetes.io/part-of: fintech-platform
-  annotations:
-    # AWS IRSA - grants read access to fintech secrets in Secrets Manager
-    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/fintech-api-sa-role
-    eks.amazonaws.com/token-expiration: "3600"
-automountServiceAccountToken: false
----
+# The fintech-api-sa ServiceAccount is created by the Helm chart
+# (helm/fintech-api/templates/serviceaccount.yaml); the bindings below reference it.
 # Role - minimal permissions the app needs inside its own namespace
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role

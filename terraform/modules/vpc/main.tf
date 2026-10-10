@@ -43,6 +43,15 @@ resource "aws_vpc" "this" {
   })
 }
 
+# Default security group is adopted with no rules so it denies all traffic.
+resource "aws_default_security_group" "this" {
+  vpc_id = aws_vpc.this.id
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-default-sg"
+  })
+}
+
 # ─── Internet Gateway ─────────────────────────────────────────────────────────
 
 resource "aws_internet_gateway" "this" {
@@ -211,17 +220,26 @@ resource "aws_iam_role_policy" "flow_log" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogGroups",
-        "logs:DescribeLogStreams"
-      ]
-      Resource = "*"
-    }]
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
+        ]
+        Resource = [
+          aws_cloudwatch_log_group.flow_log[0].arn,
+          "${aws_cloudwatch_log_group.flow_log[0].arn}:*"
+        ]
+      },
+      {
+        # DescribeLogGroups is a list action and does not support resource-level scoping.
+        Effect   = "Allow"
+        Action   = ["logs:DescribeLogGroups"]
+        Resource = "*"
+      }
+    ]
   })
 }
 
@@ -231,7 +249,7 @@ resource "aws_vpc_endpoint" "s3" {
   count = var.enable_s3_endpoint ? 1 : 0
 
   vpc_id            = aws_vpc.this.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.s3"
   vpc_endpoint_type = "Gateway"
   route_table_ids   = concat(aws_route_table.public[*].id, aws_route_table.private[*].id)
 
@@ -244,7 +262,7 @@ resource "aws_vpc_endpoint" "ecr_api" {
   count = var.enable_ecr_endpoints ? 1 : 0
 
   vpc_id              = aws_vpc.this.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ecr.api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ecr.api"
   vpc_endpoint_type   = "Interface"
   subnet_ids          = aws_subnet.private[*].id
   security_group_ids  = [aws_security_group.vpc_endpoints[0].id]
@@ -259,7 +277,7 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
   count = var.enable_ecr_endpoints ? 1 : 0
 
   vpc_id              = aws_vpc.this.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ecr.dkr"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ecr.dkr"
   vpc_endpoint_type   = "Interface"
   subnet_ids          = aws_subnet.private[*].id
   security_group_ids  = [aws_security_group.vpc_endpoints[0].id]
