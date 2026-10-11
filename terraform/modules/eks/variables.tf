@@ -54,7 +54,7 @@ variable "cluster_endpoint_public_access_cidrs" {
 variable "log_retention_days" {
   description = "CloudWatch log retention in days for EKS control plane logs"
   type        = number
-  default     = 90
+  default     = 365
 }
 
 variable "node_groups" {

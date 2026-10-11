@@ -16,9 +16,12 @@ All notable changes to this project are documented here.
 - VPC flow-log IAM policy scoped to the flow-log log group instead of `*`
 - `data.aws_region.current.name` replaced with the non-deprecated `region` attribute
 - Third-party GitHub Actions pinned to release tags instead of `@master`
+- Security group egress in the `eks` and `vpc` modules is no longer allow-all: the control plane reaches only the nodes, nodes reach each other and HTTPS, and the interface-endpoint group has no egress
+- Default log retention for EKS control plane logs and VPC flow logs raised from 90 to 365 days
 
 ### Fixed
 - Duplicate label keys in the Deployment pod template
+- The node security group was never attached to the node launch template, so its rules did not apply
 - Capability-drop policy did not fire when a container had no `capabilities` block
 - Pod label policy did not fire when a Pod had no labels at all
 
