@@ -26,6 +26,7 @@ locals {
 }
 
 data "aws_availability_zones" "available" {
+  # checkov:skip=CKV_AWS_394:The module takes the first az_count zones of whatever region it is applied in; pinning zone names would tie it to one region.
   state = "available"
 }
 
@@ -289,6 +290,7 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
 }
 
 resource "aws_security_group" "vpc_endpoints" {
+  # checkov:skip=CKV2_AWS_5:Attached to the ECR interface endpoints below; the check does not follow the count index.
   count = var.enable_ecr_endpoints ? 1 : 0
 
   name        = "${local.name_prefix}-vpc-endpoints-sg"
@@ -303,13 +305,8 @@ resource "aws_security_group" "vpc_endpoints" {
     description = "HTTPS from VPC CIDR"
   }
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "All outbound"
-  }
+  # No egress block: interface endpoints only answer requests, and Terraform
+  # removes the default allow-all egress rule when none is declared.
 
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-vpc-endpoints-sg"

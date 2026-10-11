@@ -162,6 +162,10 @@ resource "aws_launch_template" "node" {
     enabled = true
   }
 
+  # Without this the node group falls back to the cluster security group and
+  # the rules on aws_security_group.nodes never apply.
+  vpc_security_group_ids = [aws_security_group.nodes.id]
+
   tag_specifications {
     resource_type = "instance"
     tags = merge(local.common_tags, {
@@ -274,14 +278,24 @@ resource "aws_security_group_rule" "cluster_ingress_nodes_443" {
   description              = "Allow nodes to reach cluster API"
 }
 
-resource "aws_security_group_rule" "cluster_egress_all" {
-  security_group_id = aws_security_group.cluster.id
-  type              = "egress"
-  from_port         = 0
-  to_port           = 0
-  protocol          = "-1"
-  cidr_blocks       = ["0.0.0.0/0"]
-  description       = "Allow all outbound"
+resource "aws_security_group_rule" "cluster_egress_nodes_443" {
+  security_group_id        = aws_security_group.cluster.id
+  type                     = "egress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.nodes.id
+  description              = "Allow cluster to reach webhooks and extension API servers on nodes"
+}
+
+resource "aws_security_group_rule" "cluster_egress_nodes_ephemeral" {
+  security_group_id        = aws_security_group.cluster.id
+  type                     = "egress"
+  from_port                = 1025
+  to_port                  = 65535
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.nodes.id
+  description              = "Allow cluster to reach kubelets and pods on nodes"
 }
 
 resource "aws_security_group" "nodes" {
@@ -319,12 +333,34 @@ resource "aws_security_group_rule" "nodes_ingress_cluster" {
   description              = "Allow cluster to reach nodes"
 }
 
-resource "aws_security_group_rule" "nodes_egress_all" {
+resource "aws_security_group_rule" "nodes_ingress_cluster_443" {
+  security_group_id        = aws_security_group.nodes.id
+  type                     = "ingress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.cluster.id
+  description              = "Allow cluster to reach webhooks and extension API servers"
+}
+
+resource "aws_security_group_rule" "nodes_egress_self" {
+  security_group_id        = aws_security_group.nodes.id
+  type                     = "egress"
+  from_port                = 0
+  to_port                  = 65535
+  protocol                 = "-1"
+  source_security_group_id = aws_security_group.nodes.id
+  description              = "Allow nodes to communicate with each other"
+}
+
+# HTTPS only: the cluster API, ECR, S3, STS and other AWS APIs. Workloads that
+# need another outbound port must add a rule for it.
+resource "aws_security_group_rule" "nodes_egress_https" {
   security_group_id = aws_security_group.nodes.id
   type              = "egress"
-  from_port         = 0
-  to_port           = 0
-  protocol          = "-1"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"]
-  description       = "Allow all outbound"
+  description       = "Allow HTTPS outbound"
 }
