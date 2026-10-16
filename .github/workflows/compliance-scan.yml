@@ -112,7 +112,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Run Checkov CIS benchmark
-        uses: bridgecrewio/checkov-action@v12.3133.0
+        uses: bridgecrewio/checkov-action@v12.3134.0
         with:
           directory: k8s/
           framework: kubernetes
@@ -147,7 +147,7 @@ jobs:
           additional_args: --out tfsec-results.json --soft-fail
 
       - name: Run Checkov Terraform
-        uses: bridgecrewio/checkov-action@v12.3133.0
+        uses: bridgecrewio/checkov-action@v12.3134.0
         with:
           directory: terraform/
           framework: terraform
