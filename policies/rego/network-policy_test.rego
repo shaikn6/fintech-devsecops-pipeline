@@ -70,9 +70,19 @@ test_ingress_from_anywhere_denied if {
     denied(req, "allows ingress from 0.0.0.0/0")
 }
 
+test_ingress_from_pod_selector_allowed if {
+    req := patched(good_netpol, [{"op": "replace", "path": "/request/object/spec/ingress/0/from/0", "value": {"podSelector": {"matchLabels": {"app": "gateway"}}}}])
+    allowed(req)
+}
+
 test_unrestricted_egress_denied if {
     req := patched(good_netpol, [{"op": "remove", "path": "/request/object/spec/egress/0/to/0/ipBlock/except"}])
     denied(req, "allows unrestricted egress to 0.0.0.0/0")
+}
+
+test_egress_to_specific_cidr_allowed if {
+    req := patched(good_netpol, [{"op": "replace", "path": "/request/object/spec/egress/0/to/0/ipBlock", "value": {"cidr": "10.0.0.0/16"}}])
+    allowed(req)
 }
 
 test_network_policy_outside_protected_namespaces_ignored if {

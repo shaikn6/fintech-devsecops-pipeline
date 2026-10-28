@@ -104,16 +104,20 @@ limits, missing `readOnlyRootFilesystem: true`, and missing
 `capabilities.drop: ["ALL"]`.
 
 The policies are unit-tested, not just syntax-checked: `opa test policies/`
-runs tests for the allow and deny path of every rule, and CI fails if any test
-fails. CI also renders the Helm chart and evaluates it against the same rules
-with Conftest, so a chart change that violates a policy fails the build. The
-policies are not deployed to a cluster admission controller by this repo.
+runs a test that triggers every deny rule, a compliant Pod and NetworkPolicy
+that must pass every rule at once, and allow tests for the inputs a rule must
+not reject (a pod-level non-root context, an unset `privileged` field, a
+digest-pinned image, an empty selector on `default-deny-all`, and so on). CI
+fails if any test fails. CI also renders the Helm chart and evaluates it
+against the same rules with Conftest, so a chart change that violates a policy
+fails the build. The policies are not deployed to a cluster admission
+controller by this repo.
 
 ## Quick Start
 
 ```bash
 git clone https://github.com/shaikn6/fintech-devsecops-pipeline
-cd fintech-devsecops-pipeline && cp .env.example .env
+cd fintech-devsecops-pipeline
 
 # Validate the Terraform modules (no backend / no credentials needed)
 terraform fmt -check -recursive

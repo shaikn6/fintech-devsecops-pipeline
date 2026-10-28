@@ -46,6 +46,10 @@ test_latest_tag_denied if {
     denied(with_image("ghcr.io/shaikn6/fintech-api:latest"), "uses the 'latest' tag")
 }
 
+test_tag_containing_latest_allowed if {
+    allowed(with_image("ghcr.io/shaikn6/fintech-api:latest-2.4.1"))
+}
+
 test_untagged_image_denied if {
     denied(with_image("ghcr.io/shaikn6/fintech-api"), "has no tag or digest")
 }
