@@ -17,9 +17,24 @@ test_run_as_root_uid_denied if {
     denied(req, "must not run as root")
 }
 
+test_non_root_uid_allowed if {
+    req := patched(good_pod, [{"op": "replace", "path": concat("", [c, "/securityContext/runAsUser"]), "value": 65534}])
+    allowed(req)
+}
+
+test_run_as_non_root_without_uid_allowed if {
+    req := patched(good_pod, [{"op": "remove", "path": concat("", [c, "/securityContext/runAsUser"])}])
+    allowed(req)
+}
+
 test_run_as_non_root_false_denied if {
     req := patched(good_pod, [{"op": "replace", "path": concat("", [c, "/securityContext/runAsNonRoot"]), "value": false}])
     denied(req, "has runAsNonRoot=false")
+}
+
+test_uid_without_run_as_non_root_allowed if {
+    req := patched(good_pod, [{"op": "remove", "path": concat("", [c, "/securityContext/runAsNonRoot"])}])
+    allowed(req)
 }
 
 test_missing_non_root_context_denied if {
@@ -42,6 +57,11 @@ test_pod_level_non_root_context_allowed if {
 test_privileged_container_denied if {
     req := patched(good_pod, [{"op": "replace", "path": concat("", [c, "/securityContext/privileged"]), "value": true}])
     denied(req, "Container 'api' is privileged")
+}
+
+test_privileged_unset_allowed if {
+    req := patched(good_pod, [{"op": "remove", "path": concat("", [c, "/securityContext/privileged"])}])
+    allowed(req)
 }
 
 test_privileged_init_container_denied if {
@@ -97,6 +117,11 @@ test_writable_root_filesystem_denied if {
 test_capabilities_not_dropped_denied if {
     req := patched(good_pod, [{"op": "replace", "path": concat("", [c, "/securityContext/capabilities/drop"]), "value": ["NET_RAW"]}])
     denied(req, "must drop ALL capabilities")
+}
+
+test_capabilities_drop_all_among_others_allowed if {
+    req := patched(good_pod, [{"op": "replace", "path": concat("", [c, "/securityContext/capabilities/drop"]), "value": ["NET_RAW", "ALL"]}])
+    allowed(req)
 }
 
 test_capabilities_unset_denied if {

@@ -9,6 +9,7 @@ All notable changes to this project are documented here.
 - Rego unit tests (`policies/rego/*_test.rego`, `policies/conftest/main_test.rego`) run with `opa test` in CI
 - Conftest gate that evaluates the rendered Helm chart against the admission policies (`policies/conftest/main.rego`)
 - `aws_default_security_group` with no rules in the `vpc` module
+- Allow-path Rego tests for alternative compliant inputs (non-root UID without `runAsNonRoot`, extra dropped capabilities, pod-selector ingress, private-CIDR egress, a compliant NetworkPolicy manifest through Conftest)
 
 ### Changed
 - Rego `deny` rules now use `deny contains msg if`, so they evaluate as a set under OPA 1.x
@@ -24,6 +25,7 @@ All notable changes to this project are documented here.
 - The node security group was never attached to the node launch template, so its rules did not apply
 - Capability-drop policy did not fire when a container had no `capabilities` block
 - Pod label policy did not fire when a Pod had no labels at all
+- README quickstart no longer copies `.env.example`; no command, workflow or script reads `.env`, so the unused file was removed
 
 ## [1.0.0] - 2026-06-16
 

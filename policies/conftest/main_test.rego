@@ -58,6 +58,16 @@ test_network_policy_manifest_is_evaluated if {
     contains(msg, "must include 'Egress' in policyTypes")
 }
 
+test_compliant_network_policy_manifest_passes if {
+    manifest := {
+        "apiVersion": "networking.k8s.io/v1",
+        "kind": "NetworkPolicy",
+        "metadata": {"name": "allow-ingress", "namespace": "fintech-prod"},
+        "spec": {"podSelector": {"matchLabels": {"app": "fintech-api"}}, "policyTypes": ["Ingress", "Egress"]},
+    }
+    count(main.deny) == 0 with input as manifest
+}
+
 test_unrelated_kinds_pass if {
     count(main.deny) == 0 with input as {"apiVersion": "v1", "kind": "Service", "metadata": {"name": "fintech-api"}}
 }
