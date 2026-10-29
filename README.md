@@ -2,17 +2,18 @@
 
 <div align="center">
 
-# Fintech DevSecOps Pipeline
+# fintech-devsecops-pipeline
 
-[![CI](https://github.com/shaikn6/fintech-devsecops-pipeline/actions/workflows/ci-security.yml/badge.svg)](https://github.com/shaikn6/fintech-devsecops-pipeline/actions)
-[![Terraform](https://img.shields.io/badge/Terraform-1.9+-purple?logo=terraform)](https://terraform.io)
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-1.29+-blue?logo=kubernetes)](https://kubernetes.io)
+[![CI](https://github.com/shaikn6/fintech-devsecops-pipeline/actions/workflows/ci-security.yml/badge.svg)](https://github.com/shaikn6/fintech-devsecops-pipeline/actions/workflows/ci-security.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![ArgoCD](https://img.shields.io/badge/ArgoCD-GitOps-orange)](https://argoproj.github.io/cd/)
+[![Terraform 1.9](https://img.shields.io/badge/Terraform-1.9-7B42BC?logo=terraform&logoColor=white)](terraform/modules)
 
 **Shift-left DevSecOps reference platform for fintech workloads — hardened Terraform (VPC + private EKS with IRSA), an OPA/Rego admission policy set, a multi-scanner CI security gate, and ArgoCD GitOps delivery.**
 
 </div>
+
+A reference implementation: the validation, lint and policy checks in [Quickstart](#quickstart) run offline and
+in CI, but the platform has not been deployed to a live AWS account or cluster.
 
 ## Architecture
 
@@ -113,7 +114,7 @@ against the same rules with Conftest, so a chart change that violates a policy
 fails the build. The policies are not deployed to a cluster admission
 controller by this repo.
 
-## Quick Start
+## Quickstart
 
 ```bash
 git clone https://github.com/shaikn6/fintech-devsecops-pipeline
