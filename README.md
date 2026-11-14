@@ -206,3 +206,6 @@ Terraform 1.9 (CI pins 1.9.5) · AWS (VPC, EKS, IAM/IRSA, KMS, ECR, CloudWatch) 
 ## License
 
 MIT
+
+---
+<sub>Part of [Nagizaaz Shaik's open-source work](https://github.com/shaikn6) · [all repositories](https://github.com/shaikn6?tab=repositories)</sub>
