@@ -4,6 +4,8 @@
 
 # fintech-devsecops-pipeline
 
+> **A fintech-grade AWS EKS stack you can stand up in one go: Terraform, ArgoCD GitOps, and policy-as-code security gates.**
+
 [![CI](https://github.com/shaikn6/fintech-devsecops-pipeline/actions/workflows/ci-security.yml/badge.svg)](https://github.com/shaikn6/fintech-devsecops-pipeline/actions/workflows/ci-security.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Terraform 1.9](https://img.shields.io/badge/Terraform-1.9-7B42BC?logo=terraform&logoColor=white)](terraform/modules)
