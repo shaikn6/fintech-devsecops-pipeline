@@ -9,13 +9,15 @@ from pathlib import Path
 
 
 def load_json(path: str) -> dict:
+    # Fail loudly: a scan file that was requested but is missing or corrupt
+    # must not be silently treated as "zero findings" (a 100% score).
     p = Path(path)
     if not p.exists():
-        return {}
+        sys.exit(f"error: scan file not found: {path}")
     try:
         return json.loads(p.read_text())
-    except json.JSONDecodeError:
-        return {}
+    except json.JSONDecodeError as e:
+        sys.exit(f"error: scan file is not valid JSON: {path}: {e}")
 
 
 def parse_trivy(data: dict) -> tuple[int, int, int]:

@@ -2,8 +2,8 @@ name: Security Pipeline
 
 # DevSecOps gate for the fintech IaC platform.
 # Scans the actual content of this repo: Terraform modules, Helm chart,
-# Kubernetes manifests, and OPA/Rego policies. Scanners report findings
-# (SARIF + logs); formatting/lint gates hard-block.
+# Kubernetes manifests, and OPA/Rego policies. Scanners report findings as
+# logs; formatting, lint, policy, secret and Python-test gates hard-block.
 
 on:
   push:
@@ -96,10 +96,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  python-tests:
+    name: Python — compliance reporter tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Unit-test the compliance reporter
+        run: python -m unittest discover -s scripts -p 'test_*.py' -v
+
   summary:
     name: Compliance Summary
     runs-on: ubuntu-latest
-    needs: [terraform, helm, iac-scan, policy, secrets]
+    needs: [terraform, helm, iac-scan, policy, secrets, python-tests]
     if: always()
     steps:
       - name: Report
@@ -113,5 +124,6 @@ jobs:
             echo "| Helm lint + template | ${{ needs.helm.result }} |"
             echo "| Checkov IaC scan | ${{ needs.iac-scan.result }} |"
             echo "| OPA/Rego check + tests + Conftest | ${{ needs.policy.result }} |"
+            echo "| Python compliance-reporter tests | ${{ needs.python-tests.result }} |"
             echo "| Gitleaks secret scan | ${{ needs.secrets.result }} |"
           } >> "$GITHUB_STEP_SUMMARY"
