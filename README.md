@@ -14,8 +14,13 @@
 
 </div>
 
-A reference implementation: the validation, lint and policy checks in [Quickstart](#quickstart) run offline and
-in CI, but the platform has not been deployed to a live AWS account or cluster.
+A reference implementation: the validation, lint and policy checks in [Quickstart](#quickstart) run locally
+with no AWS credentials or backend (Terraform still downloads providers on `init`), and in CI, but the platform
+has not been deployed to a live AWS account or cluster.
+
+Among [the owner's repositories](https://github.com/shaikn6?tab=repositories) — mostly LLM, agent and
+financial-modelling work — this is the infrastructure-and-platform-security one: Terraform/EKS plus
+policy-as-code gates, not a model or application.
 
 ## Architecture
 
@@ -64,13 +69,14 @@ flowchart LR
         HELM["helm lint + template<br/>(hard gate)"]
         CKV["Checkov IaC scan<br/>(advisory)"]
         OPA["OPA check + unit tests,<br/>Conftest on rendered chart<br/>(hard gate)"]
+        PY["Python reporter<br/>unit tests<br/>(hard gate)"]
         GL["Gitleaks secret scan<br/>(hard gate)"]
     end
 
     CI --> SUM[Compliance summary]
     SUM --> ARGOCD["ArgoCD auto-sync<br/>helm/fintech-api → EKS"]
 
-    WEEKLY["Weekly compliance scan<br/>(cron) — Trivy fs/config,<br/>pip-audit SBOM, CIS-K8s,<br/>tfsec → report + issue"] -.-> CI
+    WEEKLY["Weekly compliance scan<br/>(cron) — Trivy fs/config, pip-audit<br/>SBOM, Safety, CIS-K8s, tfsec →<br/>artifacts; Trivy-fs → score report + issue"] -.-> CI
 ```
 
 ## Key Components
@@ -79,9 +85,9 @@ flowchart LR
 |-----------|-----------|--------------------|
 | Network | Terraform `vpc` module | VPC, public/private subnets per AZ, NAT, IGW, flow logs, S3 + ECR VPC endpoints |
 | Compute | Terraform `eks` module | Private EKS control plane (KMS-encrypted secrets, audit logging), managed node group, IRSA OIDC provider, vpc-cni/coredns/kube-proxy/ebs-csi addons |
-| CI security gate | GitHub Actions (`ci-security.yml`) | terraform fmt/validate, helm lint/template, Checkov, OPA check + unit tests, Conftest on the rendered chart, Gitleaks |
+| CI security gate | GitHub Actions (`ci-security.yml`) | terraform fmt/validate, helm lint/template, Checkov, OPA check + unit tests, Conftest on the rendered chart, Python compliance-reporter unit tests, Gitleaks |
 | Admission policy | OPA / Rego (`policies/rego`) | Container security, image signing, network-policy `deny` rules, each covered by unit tests (`*_test.rego`); `policies/conftest` applies them to rendered manifests |
-| Compliance | Scheduled scan (`compliance-scan.yml` + `scripts/compliance_reporter.py`) | Weekly Trivy/tfsec/pip-audit/CIS-K8s sweep → HTML+JSON report, auto-issue on critical findings |
+| Compliance | Scheduled scan (`compliance-scan.yml` + `scripts/compliance_reporter.py`) | Weekly Trivy/tfsec/pip-audit/Safety/CIS-K8s scanners upload findings as artifacts; the reporter computes the HTML+JSON score from the Trivy filesystem scan (`--framework` is a report label, not a per-framework mapping) and opens an issue on critical findings |
 | GitOps | ArgoCD (`argocd/`) | Self-healing app + AppProject, prune + auto-sync to EKS |
 | Delivery artifact | Helm (`helm/fintech-api`) | Deployment, service, ingress, HPA, NetworkPolicy, configmap, ServiceAccount |
 
@@ -140,6 +146,9 @@ opa test policies/ -v
 helm template fintech-api helm/fintech-api --namespace fintech-prod \
   | conftest test --policy policies/ -
 
+# Unit-test the Python compliance reporter (standard library only)
+python -m unittest discover -s scripts -p 'test_*.py'
+
 # Register the GitOps application (requires an ArgoCD-managed cluster)
 kubectl apply -f argocd/projects/fintech-project.yaml
 kubectl apply -f argocd/apps/fintech-app.yaml
@@ -147,13 +156,28 @@ kubectl apply -f argocd/apps/fintech-app.yaml
 
 > The `eks`/`vpc` modules are consumed by a root configuration that supplies a
 > backend and AWS credentials; the commands above run the same validation,
-> linting, and policy checks the CI security pipeline runs, fully offline.
+> linting, and policy checks the CI security pipeline runs, with no AWS
+> credentials or backend (`terraform init` downloads providers).
 > Terraform validate, Helm lint, the OPA check and unit tests, the Conftest
-> chart evaluation, and Gitleaks are hard gates that fail the build; Checkov
-> is advisory and reports findings without blocking.
+> chart evaluation, the Python reporter tests, and Gitleaks are hard gates that
+> fail the build; Checkov is advisory and reports findings without blocking.
 >
 > This is a reference implementation. It has not been deployed to a live AWS
 > account or cluster.
+
+### Checks and counts
+
+| Gate | Command | Reproduced locally (2026-11-15) | In CI |
+|------|---------|---------------------------------|-------|
+| Terraform fmt + validate | `terraform fmt -check`; `validate` per module | pass (fmt clean; eks + vpc valid) | [green](https://github.com/shaikn6/fintech-devsecops-pipeline/actions/runs/43576330049) |
+| Helm lint + template | `helm lint`; `helm template` | pass (1 chart, 0 failed) | green |
+| OPA/Rego unit tests | `opa test policies/` | 58/58 pass | green |
+| Conftest chart evaluation | `helm template … \| conftest test` | 9/9 pass; fails (exit 1) on an injected policy violation | green |
+| Python reporter tests | `python -m unittest discover -s scripts` | 8/8 pass | green |
+
+Local tool versions: Terraform 1.15.5, Helm 4.2.0, OPA 1.19.0, Conftest 0.71.x,
+Python 3.15. CI pins Terraform 1.9.5, Conftest 0.71.1 and Python 3.11; the
+latest `ci-security.yml` run on `main` is green.
 
 ## Directory Structure
 
