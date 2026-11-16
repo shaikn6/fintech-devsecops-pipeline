@@ -76,7 +76,7 @@ flowchart LR
     CI --> SUM[Compliance summary]
     SUM --> ARGOCD["ArgoCD auto-sync<br/>helm/fintech-api → EKS"]
 
-    WEEKLY["Weekly compliance scan<br/>(cron) — Trivy fs/config, pip-audit<br/>SBOM, Safety, CIS-K8s, tfsec →<br/>artifacts; Trivy-fs → score report + issue"] -.-> CI
+    WEEKLY["Weekly compliance scan<br/>(cron) — Trivy fs/config, pip-audit<br/>SBOM, Safety, Checkov K8s, tfsec →<br/>artifacts; Trivy-fs → score report + issue"] -.-> CI
 ```
 
 ## Key Components
@@ -87,7 +87,7 @@ flowchart LR
 | Compute | Terraform `eks` module | Private EKS control plane (KMS-encrypted secrets, audit logging), managed node group, IRSA OIDC provider, vpc-cni/coredns/kube-proxy/ebs-csi addons |
 | CI security gate | GitHub Actions (`ci-security.yml`) | terraform fmt/validate, helm lint/template, Checkov, OPA check + unit tests, Conftest on the rendered chart, Python compliance-reporter unit tests, Gitleaks |
 | Admission policy | OPA / Rego (`policies/rego`) | Container security, image signing, network-policy `deny` rules, each covered by unit tests (`*_test.rego`); `policies/conftest` applies them to rendered manifests |
-| Compliance | Scheduled scan (`compliance-scan.yml` + `scripts/compliance_reporter.py`) | Weekly Trivy/tfsec/pip-audit/Safety/CIS-K8s scanners upload findings as artifacts; the reporter computes the HTML+JSON score from the Trivy filesystem scan (`--framework` is a report label, not a per-framework mapping) and opens an issue on critical findings |
+| Compliance | Scheduled scan (`compliance-scan.yml` + `scripts/compliance_reporter.py`) | Weekly Trivy/tfsec/pip-audit/Safety scans and Checkov's Kubernetes checks (the workflow job is named "CIS Kubernetes Benchmark", but it runs Checkov, not the CIS benchmark itself) upload findings as artifacts; the reporter computes the HTML+JSON score from the Trivy filesystem scan (`--framework` is a report label, not a per-framework mapping) and opens an issue on critical findings |
 | GitOps | ArgoCD (`argocd/`) | Self-healing app + AppProject, prune + auto-sync to EKS |
 | Delivery artifact | Helm (`helm/fintech-api`) | Deployment, service, ingress, HPA, NetworkPolicy, configmap, ServiceAccount |
 
