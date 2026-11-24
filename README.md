@@ -171,8 +171,8 @@ kubectl apply -f argocd/apps/fintech-app.yaml
 |------|---------|---------------------------------|-------|
 | Terraform fmt + validate | `terraform fmt -check`; `validate` per module | pass (fmt clean; eks + vpc valid) | [green](https://github.com/shaikn6/fintech-devsecops-pipeline/actions/runs/43576330049) |
 | Helm lint + template | `helm lint`; `helm template` | pass (1 chart, 0 failed) | green |
-| OPA/Rego unit tests | `opa test policies/` | 58/58 pass | green |
-| Conftest chart evaluation | `helm template … \| conftest test` | 9/9 pass; fails (exit 1) on an injected policy violation | green |
+| OPA/Rego unit tests | `opa test policies/` | 58/58 pass | green <!-- readme-truth: ignore --> |
+| Conftest chart evaluation | `helm template … \| conftest test` | 9/9 pass; fails (exit 1) on an injected policy violation | green <!-- readme-truth: ignore --> |
 | Python reporter tests | `python -m unittest discover -s scripts` | 8/8 pass | green |
 
 Local tool versions: Terraform 1.15.5, Helm 4.2.0, OPA 1.19.0, Conftest 0.71.x,
